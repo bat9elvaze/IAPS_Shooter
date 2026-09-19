@@ -153,6 +153,7 @@ GameObject:
   - component: {fileID: 6036543073174441600}
   - component: {fileID: 3003446206902762911}
   - component: {fileID: 4197376101501819824}
+  - component: {fileID: 7753058005777008282}
   m_Layer: 0
   m_Name: TopDownPlayer
   m_TagString: Player
@@ -367,6 +368,25 @@ MonoBehaviour:
   fireRate: 0.15
   firePoint: {fileID: 8905284927780753136}
   bulletPrefab: {fileID: 8374137559873577945, guid: 5814f660ba6e2354dbbd4318e7620a97, type: 3}
+--- !u!114 &7753058005777008282
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4257838975123537348}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 784b2f4e1d7e0bd41b8d16b59109660a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerHealth
+  ShowTopMostFoldoutHeaderGroup: 1
+  maxHealth: 100
+  currentHealth:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 100
 --- !u!1 &7719453048471019365
 GameObject:
   m_ObjectHideFlags: 0
