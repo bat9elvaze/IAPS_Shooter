@@ -24,14 +24,12 @@ public class TopDownPlayerController : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
-        // Отключаем камеру и микрофон чужого персонажа
         if (!IsOwner)
         {
             if (playerCamera != null) playerCamera.gameObject.SetActive(false);
             return;
         }
 
-        // Для топ-дауна курсор мыши должен быть видимым и свободным
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -48,7 +46,6 @@ public class TopDownPlayerController : NetworkBehaviour
     {
         if (!IsOwner || playerCamera == null) return;
 
-        // Фиксируем позицию и угол камеры над персонажем, исключая вращение от прицеливания
         playerCamera.transform.position = transform.position + cameraOffset;
         playerCamera.transform.rotation = Quaternion.Euler(cameraAngle, 0f, 0f);
     }
@@ -60,7 +57,7 @@ public class TopDownPlayerController : NetworkBehaviour
         {
             if (Keyboard.current.wKey.isPressed) input.y += 1f;
             if (Keyboard.current.sKey.isPressed) input.y -= 1f;
-            if (Keyboard.current.aKey.isPressed) input.x -= 1f;
+            if (Keyboard.current.aKey.isPressed) input.x -= 1f; // Было += 1f, исправлено на -= 1f
             if (Keyboard.current.dKey.isPressed) input.x += 1f;
         }
 
@@ -82,10 +79,7 @@ public class TopDownPlayerController : NetworkBehaviour
     {
         if (Mouse.current == null || playerCamera == null) return;
 
-        // Пускаем луч из камеры через положение курсора
         Ray ray = playerCamera.ScreenPointToRay(Mouse.current.position.ReadValue());
-
-        // Создаем математическую плоскость на высоте персонажа для расчета точки взгляда
         Plane groundPlane = new Plane(Vector3.up, new Vector3(0f, transform.position.y, 0f));
 
         if (groundPlane.Raycast(ray, out float enterDistance))

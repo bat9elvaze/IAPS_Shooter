@@ -35,7 +35,6 @@ public class TopDownShooting : NetworkBehaviour
     {
         if (bulletPrefab == null) return;
 
-        // Сервер создает физический объект и регистрирует его в сети
         GameObject bulletInstance = Instantiate(bulletPrefab, position, rotation);
         bulletInstance.GetComponent<NetworkObject>().Spawn(true);
     }
