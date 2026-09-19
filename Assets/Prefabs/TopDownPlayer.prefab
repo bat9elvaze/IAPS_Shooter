@@ -367,7 +367,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   fireRate: 0.15
   firePoint: {fileID: 8905284927780753136}
-  bulletPrefab: {fileID: 8374137559873577945, guid: 5814f660ba6e2354dbbd4318e7620a97, type: 3}
+  bulletPrefab: {fileID: 8374137559873577945, guid: 24c8d0c6501fccb48965bb840509686a, type: 3}
 --- !u!114 &7753058005777008282
 MonoBehaviour:
   m_ObjectHideFlags: 0

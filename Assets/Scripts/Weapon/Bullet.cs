@@ -1,54 +1,67 @@
-using Unity.Netcode;
 using UnityEngine;
 
-public class Bullet : NetworkBehaviour
+/// <summary>
+/// Обычная (НЕ сетевая) пуля. Каждый игрок создаёт её у себя локально,
+/// летит она у всех одинаково, а урон наносит только сервер/хост.
+/// ВАЖНО: на префабе пули не должно быть NetworkObject и NetworkTransform.
+/// </summary>
+public class Bullet : MonoBehaviour
 {
-    [Header("Параметры пули")]
+    [Header("Параметры снаряда")]
     [SerializeField] private float speed = 28f;
-    [SerializeField] private float lifeTime = 2.5f;
     [SerializeField] private int damage = 25;
+    [SerializeField] private float lifeTime = 2.5f;
 
-    private float spawnTime;
+    [Header("Отладка")]
+    [Tooltip("Писать в консоль, во что попала пуля")]
+    [SerializeField] private bool logHits = false;
 
-    public override void OnNetworkSpawn()
+    private bool dealsDamage; // true только у боевой пули на сервере/хосте
+    private bool hasHit;
+
+    public void Init(bool authoritative)
     {
-        spawnTime = Time.time;
+        dealsDamage = authoritative;
+    }
+
+    private void Start()
+    {
+        Destroy(gameObject, lifeTime);
     }
 
     private void Update()
     {
-        // Пуля летит вперед с одинаковой скоростью и у сервера, и у клиентов
-        transform.position += transform.forward * (speed * Time.deltaTime);
-
-        // Уничтожение по истечении времени жизни (контролирует только сервер)
-        if (IsServer && Time.time >= spawnTime + lifeTime)
-        {
-            DespawnBullet();
-        }
+        transform.Translate(Vector3.forward * (speed * Time.deltaTime));
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        // Урон и попадания обрабатывает строго сервер
-        if (!IsServer) return;
+        if (hasHit) return;
 
-        // Игнорируем самих игроков, чтобы пуля не взрывалась внутри стреляющего
-        if (other.CompareTag("Player")) return;
-
-        // Если попали в объект со здоровьем — наносим урон
-        if (other.TryGetComponent<EnemyHealth>(out var health))
+        if (logHits)
         {
-            health.TakeDamage(damage);
+            Debug.Log($"[Bullet] Контакт с '{other.name}' (trigger: {other.isTrigger})", other);
         }
 
-        DespawnBullet();
-    }
+        // 1. Игроки: игнорируем любые их коллайдеры, в том числе дочерние
+        //    и "запаздывающие копии" игроков-клиентов на сервере
+        if (other.GetComponentInParent<PlayerHealth>() != null) return;
 
-    private void DespawnBullet()
-    {
-        if (NetworkObject != null && NetworkObject.IsSpawned)
+        // 2. Враг
+        EnemyHealth enemy = other.GetComponentInParent<EnemyHealth>();
+        if (enemy != null)
         {
-            NetworkObject.Despawn(true);
+            hasHit = true;
+            if (dealsDamage) enemy.TakeDamage(damage);
+            Destroy(gameObject);
+            return;
         }
+
+        // 3. Триггеры и прочие пули игнорируем
+        if (other.isTrigger) return;
+
+        // 4. Стены / препятствия
+        hasHit = true;
+        Destroy(gameObject);
     }
 }

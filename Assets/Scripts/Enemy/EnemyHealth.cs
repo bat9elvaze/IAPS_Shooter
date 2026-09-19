@@ -4,6 +4,7 @@ using UnityEngine;
 public class EnemyHealth : NetworkBehaviour
 {
     [SerializeField] private int maxHealth = 100;
+
     public NetworkVariable<int> currentHealth = new NetworkVariable<int>(
         100,
         NetworkVariableReadPermission.Everyone,
@@ -11,21 +12,40 @@ public class EnemyHealth : NetworkBehaviour
     );
 
     private Renderer rend;
+    private Material materialInstance;
+    private bool isDead;
 
     private void Awake()
     {
         rend = GetComponent<Renderer>();
+        if (rend != null)
+        {
+            // Один раз создаём копию материала (а не при каждом обновлении цвета)
+            materialInstance = rend.material;
+        }
     }
 
     public override void OnNetworkSpawn()
     {
         currentHealth.OnValueChanged += OnHealthChanged;
+
+        if (IsServer)
+        {
+            currentHealth.Value = maxHealth;
+        }
+
         UpdateVisual();
     }
 
     public override void OnNetworkDespawn()
     {
         currentHealth.OnValueChanged -= OnHealthChanged;
+
+        if (materialInstance != null)
+        {
+            Destroy(materialInstance);
+            materialInstance = null;
+        }
     }
 
     private void OnHealthChanged(int oldVal, int newVal)
@@ -35,35 +55,25 @@ public class EnemyHealth : NetworkBehaviour
 
     private void UpdateVisual()
     {
-        if (rend != null)
-        {
-            float t = Mathf.Clamp01((float)currentHealth.Value / maxHealth);
-            rend.material.color = Color.Lerp(Color.red, Color.white, t);
-        }
+        if (materialInstance == null) return;
+
+        float t = Mathf.Clamp01((float)currentHealth.Value / maxHealth);
+        materialInstance.color = Color.Lerp(Color.red, Color.white, t);
     }
 
     public void TakeDamage(int damage)
     {
-        if (!IsServer) return;
+        if (!IsServer || !IsSpawned || isDead) return;
 
-        currentHealth.Value -= damage;
+        currentHealth.Value = Mathf.Max(0, currentHealth.Value - damage);
 
         if (currentHealth.Value <= 0)
         {
-            // 1. СНАЧАЛА отправляем RPC клиентам, пока объект активен в сети
-            DisableRpc();
+            isDead = true;
 
-            // 2. И ТОЛЬКО ПОТОМ деспавним его
-            if (NetworkObject != null && NetworkObject.IsSpawned)
-            {
-                NetworkObject.Despawn(false);
-            }
+            // Despawn(true) уничтожает объект и на сервере, и у всех клиентов.
+            // Отдельный RPC на отключение больше не нужен.
+            NetworkObject.Despawn(true);
         }
-    }
-
-    [Rpc(SendTo.ClientsAndHost)]
-    private void DisableRpc()
-    {
-        gameObject.SetActive(false);
     }
 }

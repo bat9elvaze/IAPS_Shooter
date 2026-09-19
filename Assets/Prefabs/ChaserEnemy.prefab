@@ -177,9 +177,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ChaserEnemy
   ShowTopMostFoldoutHeaderGroup: 1
   moveSpeed: 4
+  damage: 15
   attackRange: 1.4
-  attackDamage: 15
   attackCooldown: 1
+  retargetInterval: 0.25
 --- !u!54 &533538974559534431
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -237,18 +238,18 @@ MonoBehaviour:
   SyncPositionX: 1
   SyncPositionY: 1
   SyncPositionZ: 1
-  SyncRotAngleX: 1
+  SyncRotAngleX: 0
   SyncRotAngleY: 1
-  SyncRotAngleZ: 1
-  SyncScaleX: 1
-  SyncScaleY: 1
-  SyncScaleZ: 1
-  PositionThreshold: 0.001
-  RotAngleThreshold: 0.01
+  SyncRotAngleZ: 0
+  SyncScaleX: 0
+  SyncScaleY: 0
+  SyncScaleZ: 0
+  PositionThreshold: 0.05
+  RotAngleThreshold: 2
   ScaleThreshold: 0.01
   UseQuaternionSynchronization: 0
   UseQuaternionCompression: 0
-  UseHalfFloatPrecision: 0
+  UseHalfFloatPrecision: 1
   InLocalSpace: 0
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1

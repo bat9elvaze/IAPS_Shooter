@@ -3,78 +3,91 @@ using UnityEngine;
 
 public class ChaserEnemy : NetworkBehaviour
 {
-    [Header("Параметры движения")]
+    [Header("Параметры врага")]
     [SerializeField] private float moveSpeed = 4f;
+    [SerializeField] private int damage = 15;
     [SerializeField] private float attackRange = 1.4f;
-
-    [Header("Параметры атаки")]
-    [SerializeField] private int attackDamage = 15;
     [SerializeField] private float attackCooldown = 1.0f;
+    [SerializeField] private float retargetInterval = 0.25f;
 
+    private Transform targetPlayer;
+    private PlayerHealth targetHealth;
     private float nextAttackTime;
-    private Transform currentTarget;
+    private float nextSearchTime;
+
+    public override void OnNetworkSpawn()
+    {
+        // ИИ считает только сервер. На клиентах Update выключаем полностью —
+        // позицию и поворот приносит NetworkTransform.
+        enabled = IsServer;
+
+        // Разносим поиск цели по времени, чтобы все враги не искали в одном кадре
+        nextSearchTime = Time.time + Random.value * retargetInterval;
+    }
 
     private void Update()
     {
-        // Логику поведения рассчитывает только сервер/хост
         if (!IsServer) return;
 
-        FindClosestPlayer();
+        if (Time.time >= nextSearchTime)
+        {
+            nextSearchTime = Time.time + retargetInterval;
+            FindClosestPlayer();
+        }
 
-        if (currentTarget == null) return;
+        if (targetPlayer == null) return;
 
-        Vector3 targetPosition = currentTarget.position;
-        targetPosition.y = transform.position.y; // Двигаемся только в плоскости пола
+        Vector3 direction = targetPlayer.position - transform.position;
+        direction.y = 0f;
+        float distance = direction.magnitude;
 
-        float distance = Vector3.Distance(transform.position, targetPosition);
-
-        // Поворот к цели
-        Vector3 direction = (targetPosition - transform.position).normalized;
-        if (direction.sqrMagnitude > 0.001f)
+        if (distance > 0.1f)
         {
             transform.rotation = Quaternion.LookRotation(direction);
         }
 
-        // Если не дошли до дистанции удара — идем вперед
         if (distance > attackRange)
         {
-            transform.position += direction * (moveSpeed * Time.deltaTime);
+            transform.position += direction.normalized * (moveSpeed * Time.deltaTime);
         }
-        else
+        else if (Time.time >= nextAttackTime)
         {
-            // Наносим урон, если кулдаун прошел
-            if (Time.time >= nextAttackTime)
-            {
-                AttackCurrentTarget();
-            }
-        }
-    }
-
-    private void AttackCurrentTarget()
-    {
-        if (currentTarget != null && currentTarget.TryGetComponent<PlayerHealth>(out var playerHealth))
-        {
-            playerHealth.TakeDamage(attackDamage);
             nextAttackTime = Time.time + attackCooldown;
+            if (targetHealth != null)
+            {
+                targetHealth.TakeDamage(damage);
+            }
         }
     }
 
     private void FindClosestPlayer()
     {
-        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
-        float closestDistance = float.MaxValue;
-        Transform bestTarget = null;
+        var clients = NetworkManager.Singleton.ConnectedClientsList;
+        Vector3 myPos = transform.position;
 
-        foreach (GameObject p in players)
+        float bestSqr = float.MaxValue;
+        Transform best = null;
+
+        for (int i = 0; i < clients.Count; i++)
         {
-            float dist = Vector3.Distance(transform.position, p.transform.position);
-            if (dist < closestDistance)
+            NetworkObject playerObject = clients[i].PlayerObject;
+            if (playerObject == null) continue;
+
+            Vector3 offset = playerObject.transform.position - myPos;
+            offset.y = 0f;
+            float sqr = offset.sqrMagnitude;
+
+            if (sqr < bestSqr)
             {
-                closestDistance = dist;
-                bestTarget = p.transform;
+                bestSqr = sqr;
+                best = playerObject.transform;
             }
         }
 
-        currentTarget = bestTarget;
+        if (best != targetPlayer)
+        {
+            targetPlayer = best;
+            targetHealth = best != null ? best.GetComponent<PlayerHealth>() : null;
+        }
     }
 }

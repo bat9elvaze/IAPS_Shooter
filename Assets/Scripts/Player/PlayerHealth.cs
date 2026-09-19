@@ -1,4 +1,5 @@
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEngine;
 
 public class PlayerHealth : NetworkBehaviour
@@ -11,6 +12,8 @@ public class PlayerHealth : NetworkBehaviour
         NetworkVariableReadPermission.Everyone,
         NetworkVariableWritePermission.Server
     );
+
+    private GUIStyle hpStyle;
 
     public override void OnNetworkSpawn()
     {
@@ -34,30 +37,41 @@ public class PlayerHealth : NetworkBehaviour
 
     private void Respawn()
     {
-        // Простой респавн на стартовую позицию с полным HP
         currentHealth.Value = maxHealth;
 
-        if (TryGetComponent<CharacterController>(out var cc))
+        // Позицией игрока управляет его владелец (ClientNetworkTransform),
+        // поэтому телепортировать нужно именно на стороне владельца.
+        RespawnRpc(Vector3.zero);
+    }
+
+    [Rpc(SendTo.Owner)]
+    private void RespawnRpc(Vector3 position)
+    {
+        TryGetComponent<CharacterController>(out var cc);
+        if (cc != null) cc.enabled = false;
+
+        transform.position = position;
+
+        if (TryGetComponent<NetworkTransform>(out var netTransform))
         {
-            cc.enabled = false;
-            transform.position = Vector3.zero;
-            cc.enabled = true;
+            // Телепорт без плавного «пролёта» через всю карту у других игроков
+            netTransform.Teleport(transform.position, transform.rotation, transform.localScale);
         }
-        else
-        {
-            transform.position = Vector3.zero;
-        }
+
+        if (cc != null) cc.enabled = true;
     }
 
     private void OnGUI()
     {
         // Отображаем индикатор здоровья только локальному игроку
-        if (!IsOwner) return;
+        if (!IsOwner || !IsSpawned) return;
 
-        GUIStyle style = new GUIStyle();
-        style.fontSize = 22;
-        style.normal.textColor = currentHealth.Value > 30 ? Color.green : Color.red;
+        if (hpStyle == null)
+        {
+            hpStyle = new GUIStyle { fontSize = 22 };
+        }
 
-        GUI.Label(new Rect(20, Screen.height - 50, 200, 40), $"HP: {currentHealth.Value} / {maxHealth}", style);
+        hpStyle.normal.textColor = currentHealth.Value > 30 ? Color.green : Color.red;
+        GUI.Label(new Rect(20, Screen.height - 50, 200, 40), $"HP: {currentHealth.Value} / {maxHealth}", hpStyle);
     }
 }
