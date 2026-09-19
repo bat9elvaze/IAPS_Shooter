@@ -112,9 +112,12 @@ public class RelayManager : MonoBehaviour
 
             var transport = NetworkManager.Singleton.GetComponent<UnityTransport>();
 
+            // ВАЖНО: клиент обязан иметь одинаковую конфигурацию с сервером
+            NetworkManager.Singleton.NetworkConfig.ConnectionApproval = true;
+
             JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
 
-            RelayServerData relayServerData = new RelayServerData(joinAllocation, "dtls");
+            RelayServerData relayServerData = new RelayServerData(joinAllocation, "udp");
             transport.SetRelayServerData(relayServerData);
 
             return NetworkManager.Singleton.StartClient();
