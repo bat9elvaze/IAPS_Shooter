@@ -15,11 +15,13 @@ public class TopDownPlayerController : NetworkBehaviour
     [SerializeField] private float cameraAngle = 60f;
 
     private CharacterController controller;
+    private PlayerInventoryUI inventoryUI;
     private Vector3 verticalVelocity;
 
     private void Awake()
     {
         controller = GetComponent<CharacterController>();
+        inventoryUI = GetComponent<PlayerInventoryUI>();
     }
 
     public override void OnNetworkSpawn()
@@ -30,24 +32,40 @@ public class TopDownPlayerController : NetworkBehaviour
             return;
         }
 
+        if (playerCamera != null)
+        {
+            playerCamera.transform.SetParent(null, worldPositionStays: true);
+        }
+
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        if (IsOwner && playerCamera != null)
+        {
+            Destroy(playerCamera.gameObject);
+        }
     }
 
     private void Update()
     {
         if (!IsOwner) return;
 
+        bool uiBlocksInput = (inventoryUI != null && inventoryUI.IsOpen) || ArsenalStation.IsOpenForLocalPlayer;
+
+        if (uiBlocksInput)
+        {
+            // Персонаж стоит на месте, камера не крутится за прицелом,
+            // пока открыт инвентарь или станция "Арсенал".
+            UpdateCameraFollow();
+            return;
+        }
+
         HandleMovement();
+        UpdateCameraFollow();
         HandleAiming();
-    }
-
-    private void LateUpdate()
-    {
-        if (!IsOwner || playerCamera == null) return;
-
-        playerCamera.transform.position = transform.position + cameraOffset;
-        playerCamera.transform.rotation = Quaternion.Euler(cameraAngle, 0f, 0f);
     }
 
     private void HandleMovement()
@@ -57,7 +75,7 @@ public class TopDownPlayerController : NetworkBehaviour
         {
             if (Keyboard.current.wKey.isPressed) input.y += 1f;
             if (Keyboard.current.sKey.isPressed) input.y -= 1f;
-            if (Keyboard.current.aKey.isPressed) input.x -= 1f; // Было += 1f, исправлено на -= 1f
+            if (Keyboard.current.aKey.isPressed) input.x -= 1f;
             if (Keyboard.current.dKey.isPressed) input.x += 1f;
         }
 
@@ -73,6 +91,14 @@ public class TopDownPlayerController : NetworkBehaviour
         }
 
         controller.Move((move * moveSpeed + verticalVelocity) * Time.deltaTime);
+    }
+
+    private void UpdateCameraFollow()
+    {
+        if (playerCamera == null) return;
+
+        playerCamera.transform.position = transform.position + cameraOffset;
+        playerCamera.transform.rotation = Quaternion.Euler(cameraAngle, 0f, 0f);
     }
 
     private void HandleAiming()

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23d94ebe796cd3343978865e455044ee, type: 3}
+  m_Name: PistolStart
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
+  weaponId: 0
+  weaponName: Pistol1
+  icon: {fileID: -5262111214504444646, guid: 82085f5d66bd513468ec7aea406a9fc3, type: 3}
+  bulletPrefab: {fileID: 8374137559873577945, guid: 24c8d0c6501fccb48965bb840509686a, type: 3}
+  fireRate: 0.35
+  damage: 35
+  handModelPrefab: {fileID: 1792403169910286024, guid: dccccd4f86d1d4749bf96558f82edf52, type: 3}
+  price: 150
+  hasDiscount: 0
+  discountedPrice: 100

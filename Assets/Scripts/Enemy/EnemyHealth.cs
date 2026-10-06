@@ -5,6 +5,9 @@ public class EnemyHealth : NetworkBehaviour
 {
     [SerializeField] private int maxHealth = 100;
 
+    [Header("Награда за убийство")]
+    [SerializeField] private int currencyReward = 10;
+
     public NetworkVariable<int> currentHealth = new NetworkVariable<int>(
         100,
         NetworkVariableReadPermission.Everyone,
@@ -20,7 +23,6 @@ public class EnemyHealth : NetworkBehaviour
         rend = GetComponent<Renderer>();
         if (rend != null)
         {
-            // Один раз создаём копию материала (а не при каждом обновлении цвета)
             materialInstance = rend.material;
         }
     }
@@ -61,7 +63,11 @@ public class EnemyHealth : NetworkBehaviour
         materialInstance.color = Color.Lerp(Color.red, Color.white, t);
     }
 
-    public void TakeDamage(int damage)
+    /// <summary>
+    /// source — чей это был выстрел (может быть null, если урон без конкретного
+    /// виновника). Если моб умирает именно от этого удара, валюта начисляется source.
+    /// </summary>
+    public void TakeDamage(int damage, PlayerInventory source)
     {
         if (!IsServer || !IsSpawned || isDead) return;
 
@@ -70,6 +76,11 @@ public class EnemyHealth : NetworkBehaviour
         if (currentHealth.Value <= 0)
         {
             isDead = true;
+
+            if (source != null)
+            {
+                source.AddCurrency(currencyReward);
+            }
 
             // Despawn(true) уничтожает объект и на сервере, и у всех клиентов.
             // Отдельный RPC на отключение больше не нужен.

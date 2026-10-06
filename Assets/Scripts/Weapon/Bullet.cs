@@ -3,13 +3,13 @@ using UnityEngine;
 /// <summary>
 /// Обычная (НЕ сетевая) пуля. Каждый игрок создаёт её у себя локально,
 /// летит она у всех одинаково, а урон наносит только сервер/хост.
-/// ВАЖНО: на префабе пули не должно быть NetworkObject и NetworkTransform.
+/// damageSource — чья это пуля (имеет значение, только если dealsDamage == true),
+/// чтобы при убийстве врага начислить валюту именно стрелку.
 /// </summary>
 public class Bullet : MonoBehaviour
 {
     [Header("Параметры снаряда")]
     [SerializeField] private float speed = 28f;
-    [SerializeField] private int damage = 25;
     [SerializeField] private float lifeTime = 2.5f;
 
     [Header("Отладка")]
@@ -18,10 +18,14 @@ public class Bullet : MonoBehaviour
 
     private bool dealsDamage; // true только у боевой пули на сервере/хосте
     private bool hasHit;
+    private int damage;
+    private PlayerInventory damageSource;
 
-    public void Init(bool authoritative)
+    public void Init(bool authoritative, int damage, PlayerInventory damageSource)
     {
         dealsDamage = authoritative;
+        this.damage = damage;
+        this.damageSource = damageSource;
     }
 
     private void Start()
@@ -52,7 +56,7 @@ public class Bullet : MonoBehaviour
         if (enemy != null)
         {
             hasHit = true;
-            if (dealsDamage) enemy.TakeDamage(damage);
+            if (dealsDamage) enemy.TakeDamage(damage, damageSource);
             Destroy(gameObject);
             return;
         }

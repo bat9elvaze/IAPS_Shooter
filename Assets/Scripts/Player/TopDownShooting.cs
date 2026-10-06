@@ -4,26 +4,61 @@ using UnityEngine.InputSystem;
 
 public class TopDownShooting : NetworkBehaviour
 {
-    [Header("Настройки стрельбы")]
-    [SerializeField] private float fireRate = 0.15f;
+    [Header("Точка вылета пуль")]
     [SerializeField] private Transform firePoint;
-    [SerializeField] private GameObject bulletPrefab;
 
-    private float nextFireTime;
+    // Слот 1 -> Digit1, Слот 2 -> Digit2 — совпадает с двумя слотами инвентаря
+    private static readonly Key[] SlotKeys = { Key.Digit1, Key.Digit2 };
+
     private static bool warnedAboutNetworkBullet;
+
+    private PlayerInventory inventory;
+    private PlayerInventoryUI inventoryUI;
+    private float nextFireTime;
+
+    private void Awake()
+    {
+        inventory = GetComponent<PlayerInventory>();
+        inventoryUI = GetComponent<PlayerInventoryUI>();
+    }
 
     private void Update()
     {
         if (!IsOwner) return;
+        if (inventoryUI != null && inventoryUI.IsOpen) return; // открыт инвентарь
+        if (ArsenalStation.IsOpenForLocalPlayer) return;        // открыта станция "Арсенал"
 
-        if (Mouse.current != null && Mouse.current.leftButton.isPressed && Time.time >= nextFireTime)
+        HandleWeaponSwitchInput();
+        HandleFireInput();
+    }
+
+    private void HandleFireInput()
+    {
+        if (Mouse.current == null || !Mouse.current.leftButton.isPressed) return;
+        if (Time.time < nextFireTime) return;
+
+        WeaponDefinition weapon = GetEquippedWeaponDefinition();
+        if (weapon == null) return; // оружие не экипировано — стрелять нечем
+
+        nextFireTime = Time.time + weapon.FireRate;
+        Shoot(weapon);
+    }
+
+    private void HandleWeaponSwitchInput()
+    {
+        if (Keyboard.current == null || inventory == null) return;
+
+        for (int slotIndex = 0; slotIndex < SlotKeys.Length; slotIndex++)
         {
-            nextFireTime = Time.time + fireRate;
-            Shoot();
+            if (Keyboard.current[SlotKeys[slotIndex]].wasPressedThisFrame)
+            {
+                inventory.EquipSlotServerRpc(slotIndex);
+                break;
+            }
         }
     }
 
-    private void Shoot()
+    private void Shoot(WeaponDefinition weapon)
     {
         Vector3 spawnPos = firePoint != null
             ? firePoint.position
@@ -35,23 +70,27 @@ public class TopDownShooting : NetworkBehaviour
         direction.Normalize();
 
         // Клиент сразу показывает свою пулю, не дожидаясь сервера (предсказание).
-        // У хоста боевая пуля создаётся мгновенно внутри FireServerRpc.
+        // Она не наносит урон, поэтому damageSource ей не нужен (null).
         if (!IsServer)
         {
-            SpawnBullet(spawnPos, direction, false);
+            SpawnBullet(spawnPos, direction, false, weapon, null);
         }
 
         FireServerRpc(spawnPos, direction);
     }
 
-    // Выполняется на сервере (если стреляет хост — сразу локально)
     [Rpc(SendTo.Server)]
     private void FireServerRpc(Vector3 position, Vector3 direction)
     {
-        // Боевая пуля: только она наносит урон
-        SpawnBullet(position, direction, true);
+        // Оружие берём из СВОЕЙ (серверной, авторитетной) копии инвентаря,
+        // а не доверяем клиенту — иначе можно было бы подделать урон или снаряд.
+        WeaponDefinition weapon = GetEquippedWeaponDefinition();
+        if (weapon == null) return;
 
-        // Остальным игрокам отправляем только визуал
+        // Это боевая пуля — передаём ей инвентарь стрелка (это "this.inventory",
+        // ведь FireServerRpc выполняется на сервере именно в копии того игрока,
+        // который стрелял), чтобы при убийстве моба начислить валюту правильному игроку.
+        SpawnBullet(position, direction, true, weapon, inventory);
         FireVisualRpc(position, direction);
     }
 
@@ -61,26 +100,39 @@ public class TopDownShooting : NetworkBehaviour
         if (IsServer) return; // у сервера/хоста уже есть боевая пуля
         if (IsOwner) return;  // у стрелка уже есть своя предсказанная пуля
 
-        SpawnBullet(position, direction, false);
+        WeaponDefinition weapon = GetEquippedWeaponDefinition();
+        if (weapon == null) return;
+
+        SpawnBullet(position, direction, false, weapon, null);
     }
 
-    private void SpawnBullet(Vector3 position, Vector3 direction, bool authoritative)
+    private WeaponDefinition GetEquippedWeaponDefinition()
     {
-        if (bulletPrefab == null) return;
+        if (inventory == null) return null;
+
+        int weaponId = inventory.equippedWeaponId.Value;
+        if (weaponId == PlayerInventory.NoWeaponId) return null;
+
+        return WeaponDatabase.Instance != null ? WeaponDatabase.Instance.GetById(weaponId) : null;
+    }
+
+    private void SpawnBullet(Vector3 position, Vector3 direction, bool authoritative, WeaponDefinition weapon, PlayerInventory damageSource)
+    {
+        if (weapon.BulletPrefab == null) return;
         if (direction.sqrMagnitude < 0.0001f) return;
 
-        GameObject instance = Instantiate(bulletPrefab, position, Quaternion.LookRotation(direction));
+        GameObject instance = Instantiate(weapon.BulletPrefab, position, Quaternion.LookRotation(direction));
 
         if (!warnedAboutNetworkBullet && instance.GetComponent<NetworkObject>() != null)
         {
             warnedAboutNetworkBullet = true;
             Debug.LogError("[TopDownShooting] На префабе пули остался NetworkObject/NetworkTransform. " +
-                           "Удалите их (сначала NetworkTransform, потом NetworkObject) — пуля теперь не сетевой объект.", bulletPrefab);
+                           "Удалите их (сначала NetworkTransform, потом NetworkObject) — пуля теперь не сетевой объект.", weapon.BulletPrefab);
         }
 
         if (instance.TryGetComponent<Bullet>(out var bullet))
         {
-            bullet.Init(authoritative);
+            bullet.Init(authoritative, weapon.Damage, damageSource);
         }
     }
 }
