@@ -185,7 +185,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: cda5a07694021da45bc0b6ffa6bf7d04, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -388,9 +388,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ArsenalStation
   stationTitle: Arsenal
   availableWeapons:
-  - {fileID: 11400000, guid: 2b0c6b185955b854dab9bd4a0e2743c4, type: 2}
-  - {fileID: 11400000, guid: ca7b1905c46f4784d9c07a85e56c18db, type: 2}
+  - {fileID: 11400000, guid: 9a74a775d4573dc43a3e0d76a2a703fb, type: 2}
   - {fileID: 11400000, guid: 3086c19e82c2cb54c85aa7eaed97dc4d, type: 2}
+  - {fileID: 11400000, guid: ca7b1905c46f4784d9c07a85e56c18db, type: 2}
+  - {fileID: 11400000, guid: 2b0c6b185955b854dab9bd4a0e2743c4, type: 2}
   availableCases:
   - {fileID: 11400000, guid: eacc4faafccd7a64ead5a50ece20756b, type: 2}
   - {fileID: 11400000, guid: bd83eb60dd47d864b9bff40eca010c14, type: 2}
@@ -802,7 +803,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: d338d3b24598245428dc2f315d10d533, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -842,13 +843,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2027297906}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
   m_LocalPosition: {x: -1.16, y: 1.65, z: 18.6101}
   m_LocalScale: {x: 2, y: 3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

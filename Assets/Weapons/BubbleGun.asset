@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 23d94ebe796cd3343978865e455044ee, type: 3}
-  m_Name: TestGun
+  m_Name: BubbleGun
   m_EditorClassIdentifier: Assembly-CSharp::WeaponDefinition
   weaponId: 2
-  weaponName: "\u041D\u043E\u0432\u043E\u0435 \u043E\u0440\u0443\u0436\u0438\u0435"
-  icon: {fileID: 0}
-  bulletPrefab: {fileID: 0}
-  fireRate: 0.15
-  damage: 25
-  handModelPrefab: {fileID: 0}
-  price: 1000
+  weaponName: BubbleGun
+  icon: {fileID: -5480243100295072854, guid: 1e495b263f59a5a418c7e9a750cfd53d, type: 3}
+  bulletPrefab: {fileID: 8374137559873577945, guid: 24c8d0c6501fccb48965bb840509686a, type: 3}
+  fireRate: 0.6
+  damage: 50
+  handModelPrefab: {fileID: 7822933353794684975, guid: 2f4020c88ee882f45b3b0a2bf5812853, type: 3}
+  price: 9999999
   hasDiscount: 1
-  discountedPrice: 250
+  discountedPrice: 1000

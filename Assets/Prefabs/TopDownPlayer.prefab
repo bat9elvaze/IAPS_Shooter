@@ -259,7 +259,7 @@ MonoBehaviour:
   Ownership: 1
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
-  m_InScenePlaced: 1
+  m_InScenePlaced: 0
   ActiveSceneSynchronization: 0
   SceneMigrationSynchronization: 0
   SpawnWithObservers: 1
@@ -403,12 +403,33 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInventory
   ShowTopMostFoldoutHeaderGroup: 1
   startingWeaponIds: 0000000001000000
+  startingCurrency: 5000
   logChanges: 1
   ownedWeaponIds:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
+  loadoutSlot1WeaponId:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: -1
+  loadoutSlot2WeaponId:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: -1
+  activeSlotIndex:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: -1
   equippedWeaponId:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
+  currency:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
@@ -441,8 +462,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerInventoryUI
   ShowTopMostFoldoutHeaderGroup: 1
-  panelPosition: {x: 20, y: 20}
-  rowHeight: 26
+  panelSize: {x: 420, y: 460}
+  cellSize: 72
+  cellSpacing: 10
+  hotbarPosition: {x: 20, y: 20}
+  hotbarCellSize: 56
 --- !u!1 &4932257227914115052
 GameObject:
   m_ObjectHideFlags: 0
